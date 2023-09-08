@@ -1,10 +1,15 @@
+
 #include <Adafruit_NeoPixel.h>
 #include <math.h>
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
-#include <ESPAsyncWebServer.h> //to receive post requests
+
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+
+
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -23,6 +28,12 @@ STATE STATE;
 
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
 
+const char* ssid = "YOUR-SSID";
+const char* password = "YOUR-PASSWORD";
+
+ESP8266WebServer server(80);
+
+
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 void runPixelsLeftToRight(byte r, byte g, byte b);
@@ -31,21 +42,27 @@ void setAllPixels(byte r, byte g, byte b, byte brightness);
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness, byte maxBrightness);
 void breathe(byte r, byte g, byte b, int delayTime);
 
+void httpBreatheReq();
+void httpRunReq();
+
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 void setup() {
   // put your setup code here, to run once:
 
   pixelsetup();
+  wifiSetup();
   serversetup();
 
 
 }
 
 void loop() {
+  server.handleClient();
+
   switch (STATE) {
     case INIT :
-      STATE = IDLE;
+      STATE = RUNRIGHT;
       break;
 
     case BREATHE :
@@ -68,11 +85,33 @@ void loop() {
 void pixelsetup()
 {
   pixels.begin();
+  setAllPixels(255, 255,255,255);
+  delay(500);
+  pixels.clear();
 }
 
 void serversetup()
 {
-  
+  server.on("/breathe", HTTP_GET, httpBreatheReq);
+  server.on("/run", HTTP_GET, httpRunReq);
+  server.begin();
+}
+
+void wifiSetup()
+{
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    setPixel(0, 0, 255, 10);
+    delay(200);
+  }
+
+  if(WiFi.status() == WL_CONNECTED)
+  {
+    setAllPixels(0, 255, 0, 100);
+    delay(1000);
+  }
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -85,6 +124,7 @@ void runPixelsLeftToRight(byte r, byte g, byte b)
     pixels.show();
     delay(500);
   }
+  pixels.clear();
 }
 
 void runPixelsRightToLeft(byte r, byte g, byte b)
@@ -95,6 +135,7 @@ void runPixelsRightToLeft(byte r, byte g, byte b)
     pixels.show();
     delay(500);
   }
+  pixels.clear();
 }
 
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness, byte maxBrightness)
@@ -121,4 +162,25 @@ void setAllPixels(byte r, byte g, byte b, byte brightness)
   pixels.fill(pixels.Color(r, g, b), 0, 15);
   pixels.setBrightness(brightness);
   pixels.show();
+}
+
+void setPixel(byte r, byte g, byte b, byte brightness)
+{
+  pixels.fill(pixels.Color(r, g, b), 5, 3);
+  pixels.setBrightness(brightness);
+  pixels.show();
+}
+
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+void httpBreatheReq()
+{
+  STATE = BREATHE;
+  server.send(200);
+}
+
+void httpRunReq()
+{
+  STATE = RUNRIGHT;
+  server.send(200);
 }
