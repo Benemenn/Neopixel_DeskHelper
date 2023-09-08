@@ -99,8 +99,8 @@ void pixelsetup()
 void serversetup()
 {
   server.on("/breathe", HTTP_GET, httpBreatheReq);
-  server.on("/run", HTTP_GET, httpRunRightReq);
-  server.on("/run", HTTP_GET, httpRunLeftReq);
+  server.on("/runright", HTTP_GET, httpRunRightReq);
+  server.on("/runleft", HTTP_GET, httpRunLeftReq);
   server.begin();
 }
 
@@ -125,6 +125,7 @@ void wifiSetup()
 
 void runPixelsLeftToRight(byte r, byte g, byte b, int delayTime)
 {
+  pixels.setBrightness(50);
   if((millis() - lastTime) > delayTime)
   {
 
@@ -159,6 +160,7 @@ void runPixelsLeftToRight(byte r, byte g, byte b, int delayTime)
 
 void runPixelsRightToLeft(byte r, byte g, byte b, int delayTime)
 {
+  pixels.setBrightness(50);
   if((millis() - lastTime) > delayTime)
   {
 
