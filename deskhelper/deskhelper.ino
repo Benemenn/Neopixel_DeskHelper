@@ -4,6 +4,8 @@
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
+#include <ESPAsyncWebServer.h> //to receive post requests
+
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 const byte PIXELDATAPIN   = 0;
