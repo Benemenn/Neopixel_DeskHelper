@@ -18,32 +18,38 @@ const byte NUMBEROFPIXELS = 15;
 
 enum BREATH{IN, OUT};
 enum STATE{INIT, IDLE, BREATHE, RUNLEFT, RUNRIGHT, FLASH};
+enum RUN{RUNIN, RUNOUT};
 
 long currentTime = millis();
 long lastTime = currentTime;
+
 byte currentBrightness = 0;
+byte runIndex = 0;
 
 BREATH BREATH;
 STATE STATE;
+RUN RUNMODE;
 
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
 
+
+
 const char* ssid = "YOUR-SSID";
-const char* password = "YOUR-PASSWORD";
+const char* password = "YOUR-PWD";
 
 ESP8266WebServer server(80);
 
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-void runPixelsLeftToRight(byte r, byte g, byte b);
-void runPixelsRightToLeft(byte r, byte g, byte b);
+void runPixelsLeftToRight(byte r, byte g, byte b, int delayTime);
+void runPixelsRightToLeft(byte r, byte g, byte b, int delayTime);
 void setAllPixels(byte r, byte g, byte b, byte brightness);
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness, byte maxBrightness);
 void breathe(byte r, byte g, byte b, int delayTime);
 
 void httpBreatheReq();
-void httpRunReq();
+void httpRunRightReq();
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -70,11 +76,11 @@ void loop() {
       break;
 
     case RUNRIGHT :
-      runPixelsLeftToRight(150, 150, 150);
+      runPixelsLeftToRight(150, 150, 150, 100);
       break;
 
     case RUNLEFT :
-      runPixelsRightToLeft(0, 0, 150);
+      runPixelsRightToLeft(0, 0, 150, 250);
       break;
   }
 
@@ -93,7 +99,8 @@ void pixelsetup()
 void serversetup()
 {
   server.on("/breathe", HTTP_GET, httpBreatheReq);
-  server.on("/run", HTTP_GET, httpRunReq);
+  server.on("/run", HTTP_GET, httpRunRightReq);
+  server.on("/run", HTTP_GET, httpRunLeftReq);
   server.begin();
 }
 
@@ -116,26 +123,72 @@ void wifiSetup()
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-void runPixelsLeftToRight(byte r, byte g, byte b)
+void runPixelsLeftToRight(byte r, byte g, byte b, int delayTime)
 {
-  for( auto i  = 0; i < NUMBEROFPIXELS; ++i)
+  if((millis() - lastTime) > delayTime)
   {
-    pixels.setPixelColor(i, r, g, b);
-    pixels.show();
-    delay(500);
+
+    if(RUNMODE == RUNIN)
+    {
+      pixels.setPixelColor(runIndex, r, g, b);
+      pixels.show();
+      runIndex++;
+      lastTime = millis();
+    }
+
+    if(RUNMODE == RUNOUT)
+    {
+      pixels.setPixelColor(runIndex, 0, 0, 0);
+      pixels.show();
+      runIndex++;
+      lastTime = millis();
+    }
+
+    if(runIndex >= (NUMBEROFPIXELS))
+    {
+      RUN nextRUNMODE;
+      runIndex = 0;
+      if(RUNMODE == RUNIN){nextRUNMODE = RUNOUT;}
+      else if(RUNMODE == RUNOUT){nextRUNMODE = RUNIN;}
+
+      RUNMODE = nextRUNMODE;
+      lastTime = millis();
+    }
   }
-  pixels.clear();
 }
 
-void runPixelsRightToLeft(byte r, byte g, byte b)
+void runPixelsRightToLeft(byte r, byte g, byte b, int delayTime)
 {
-  for( auto i  = NUMBEROFPIXELS - 1; i >= 0; --i)
+  if((millis() - lastTime) > delayTime)
   {
-    pixels.setPixelColor(i, r, g, b);
-    pixels.show();
-    delay(500);
+
+    if(RUNMODE == RUNIN)
+    {
+      pixels.setPixelColor(runIndex, r, g, b);
+      pixels.show();
+      runIndex--;
+      lastTime = millis();
+    }
+
+    if(RUNMODE == RUNOUT)
+    {
+      pixels.setPixelColor(runIndex, 0, 0, 0);
+      pixels.show();
+      runIndex--;
+      lastTime = millis();
+    }
+
+    if(runIndex <= 0)
+    {
+      RUN nextRUNMODE;
+      runIndex = NUMBEROFPIXELS;
+      if(RUNMODE == RUNIN){nextRUNMODE = RUNOUT;}
+      else if(RUNMODE == RUNOUT){nextRUNMODE = RUNIN;}
+
+      RUNMODE = nextRUNMODE;
+      lastTime = millis();
+    }
   }
-  pixels.clear();
 }
 
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness, byte maxBrightness)
@@ -154,7 +207,7 @@ void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness, byte max
 
 void breathe(byte r, byte g, byte b, int delayTime)
 {
-  breathe(r, g, b, delayTime, 20, 80);
+  breathe(r, g, b, delayTime, 5, 50);
 }
 
 void setAllPixels(byte r, byte g, byte b, byte brightness)
@@ -179,8 +232,14 @@ void httpBreatheReq()
   server.send(200);
 }
 
-void httpRunReq()
+void httpRunRightReq()
 {
   STATE = RUNRIGHT;
+  server.send(200);
+}
+
+void httpRunLeftReq()
+{
+  STATE = RUNLEFT;
   server.send(200);
 }
