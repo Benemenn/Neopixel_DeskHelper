@@ -9,7 +9,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 
-
+#include <credentials.h>
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -33,10 +33,6 @@ RUN RUNMODE;
 
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
 
-
-
-//const char* ssid = "YOUR-SSID";
-//const char* password = "YOUR-PWD";
 
 ESP8266WebServer server(80);
 
@@ -66,7 +62,7 @@ void setup() {
   // put your setup code here, to run once:
 
   pixelsetup();
-  //wifiSetup();    // enable when using WiFi
+  wifiSetup();    // enable when using WiFi
   //serversetup();  // enable when using http requests to change through modes
 
 }

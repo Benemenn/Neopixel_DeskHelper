@@ -9,3 +9,4 @@ Neopixel_Deskhelper/.vscode/extensions.json
 Neopixel_Deskhelper/.vscode/settings.json
 
 **/Neopixel_Deskhelper/lib
+Neopixel_Deskhelper/src/credentials.h
