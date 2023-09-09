@@ -16,8 +16,8 @@
 const byte PIXELDATAPIN   = 0;
 const byte NUMBEROFPIXELS = 15;
 
-enum BREATH{IN, OUT};
-enum STATE{INIT, IDLE, BREATHE, RUNLEFT, RUNRIGHT, FLASH};
+enum BREATHMODE{IN, OUT};
+enum STATES{INIT, IDLE, BREATHE, RUNLEFT, RUNRIGHT, FLASH};
 enum RUN{RUNIN, RUNOUT};
 
 long currentTime = millis();
@@ -26,30 +26,37 @@ long lastTime = currentTime;
 byte currentBrightness = 0;
 byte runIndex = 0;
 
-BREATH BREATH;
-STATE STATE;
+BREATHMODE BREATH;
+STATES STATE;
 RUN RUNMODE;
 
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
 
 
 
-const char* ssid = "YOUR-SSID";
-const char* password = "YOUR-PWD";
+//const char* ssid = "YOUR-SSID";
+//const char* password = "YOUR-PWD";
 
 ESP8266WebServer server(80);
 
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+void pixelsetup();
+void wifiSetup();
+void serversetup();
+
 
 void runPixelsLeftToRight(byte r, byte g, byte b, int delayTime);
 void runPixelsRightToLeft(byte r, byte g, byte b, int delayTime);
 void setAllPixels(byte r, byte g, byte b, byte brightness);
+void setPixel(byte r, byte g, byte b, byte brightness);
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness, byte maxBrightness);
 void breathe(byte r, byte g, byte b, int delayTime);
 
+
 void httpBreatheReq();
 void httpRunRightReq();
+void httpRunLeftReq();
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -59,7 +66,6 @@ void setup() {
   pixelsetup();
   wifiSetup();
   serversetup();
-
 
 }
 
