@@ -17,7 +17,7 @@ const byte PIXELDATAPIN   = 0;
 const byte NUMBEROFPIXELS = 15;
 
 enum BREATHMODE{IN, OUT};
-enum STATES{INIT, IDLE, BREATHE, RUNLEFT, RUNRIGHT, LASTMODE = RUNRIGHT, FIRSTMODE = BREATHE};
+enum STATES{INIT, IDLE, BREATHE, RUNLEFT, RUNRIGHT, KITEFFECT, LASTMODE = KITEFFECT, FIRSTMODE = BREATHE};
 enum RUN{RUNIN, RUNOUT};
 
 long currentTime = millis();
@@ -55,6 +55,7 @@ void runPixelsRightToLeft(byte r, byte g, byte b, int delayTime, byte brightness
 void setAllPixels(byte r, byte g, byte b, byte brightness);
 void setPixels(byte r, byte g, byte b, byte brightness, byte fromPixel = 5, byte pixelCount = 3);
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness = 5, byte maxBrightness = 50);
+void kitEffect(byte r = 255, byte g = 0, byte b = 0, byte brightness = 255, int delayTime = 200);
 
 void httpBreatheReq();
 void httpRunRightReq();
@@ -76,7 +77,7 @@ void loop() {
 
   switch (STATE) {
     case INIT :
-      STATE = RUNRIGHT;
+      STATE = BREATHE;
       break;
 
     case BREATHE :
@@ -89,6 +90,10 @@ void loop() {
 
     case RUNLEFT :
       runPixelsRightToLeft(0, 0, 150, 100);
+      break;
+
+    case KITEFFECT :
+      kitEffect();
       break;
   }
 
@@ -332,8 +337,27 @@ void setPixels(byte r, byte g, byte b, byte brightness, byte fromPixel, byte pix
   pixels.show();
 }
 
-void toGreen()
+/**
+ * @brief imitates the legendary KIT effect
+ * @param r - red, 0-255
+ * @param g - green, 0-255
+ * @param b - blue, 0-255
+ * @param brightness - brighnessvalue from 0-255
+ * @param delayTime time between switching from led to led
+*/
+void kitEffect(byte r, byte g, byte b, byte brightness, int delayTime)
 {
+  if(millis() - lastTime > delayTime)
+  {
+    pixels.setBrightness(brightness);
+    pixels.clear();
+    pixels.setPixelColor(runIndex, r, g, b);
+    (RUNMODE == RUNIN) ? runIndex++ : runIndex--;
+    pixels.show();
+    if(runIndex == NUMBEROFPIXELS-1){ RUNMODE = RUNOUT; }
+    if(runIndex == 0){ RUNMODE = RUNIN; }
+    lastTime = millis();
+  }
   
 }
 
