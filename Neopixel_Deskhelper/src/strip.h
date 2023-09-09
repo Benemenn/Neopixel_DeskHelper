@@ -4,6 +4,6 @@ class strip{
 
     public:
         Adafruit_NeoPixel pixels();
-        uint32_t Color
+        uint32_t Color;
 
 };
