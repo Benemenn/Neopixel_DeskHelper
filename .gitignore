@@ -1,0 +1,8 @@
+*.DS_Store
+*.pio
+.browse.c_cpp.db*
+c_cpp_properties.json
+launch.json
+/ipch
+
+Neopixel_Deskhelper/.vscode/extensions.json
