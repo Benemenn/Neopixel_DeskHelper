@@ -10,6 +10,8 @@
 #include <ESP8266WebServer.h>
 
 #include <credentials.h>
+#include <color.h>
+
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -17,8 +19,9 @@ const byte PIXELDATAPIN   = 0;
 const byte NUMBEROFPIXELS = 15;
 
 enum BREATHMODE{IN, OUT};
-enum STATES{INIT, IDLE, BREATHE, RUNLEFT, RUNRIGHT, KITEFFECT, LASTMODE = KITEFFECT, FIRSTMODE = BREATHE};
+enum STATES{INIT, IDLE, BREATHE, RUNLEFT, RUNRIGHT, SPLATTER, KITEFFECT, LASTMODE = KITEFFECT, FIRSTMODE = BREATHE};
 enum RUN{RUNIN, RUNOUT};
+enum INNERSTATE{ENTRY, DO, EXIT};
 
 long currentTime = millis();
 long lastTime = currentTime;
@@ -30,9 +33,9 @@ byte runIndex = 0;
 BREATHMODE BREATH;
 STATES STATE;
 RUN RUNMODE;
+INNERSTATE INSTATE;
 
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
-
 
 
 //const char* ssid = "YOUR-SSID";
@@ -56,6 +59,7 @@ void setAllPixels(byte r, byte g, byte b, byte brightness);
 void setPixels(byte r, byte g, byte b, byte brightness, byte fromPixel = 5, byte pixelCount = 3);
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness = 5, byte maxBrightness = 50);
 void kitEffect(byte r = 255, byte g = 0, byte b = 0, byte brightness = 255, int delayTime = 200);
+void splatter(byte brightness = 255, int delayTime = 250);
 
 void httpBreatheReq();
 void httpRunRightReq();
@@ -94,6 +98,10 @@ void loop() {
 
     case KITEFFECT :
       kitEffect();
+      break;
+
+    case SPLATTER :
+      splatter();
       break;
   }
 
@@ -359,6 +367,22 @@ void kitEffect(byte r, byte g, byte b, byte brightness, int delayTime)
     lastTime = millis();
   }
   
+}
+
+/**
+ * @brief splatter function, randomly turns led on on random color
+ * @param brightness brightness of leds
+ * @param delayTime delay until next led is turned on
+*/
+void splatter(byte brightness, int delayTime)
+{
+  if(millis() - lastTime > delayTime)
+  {
+    pixels.setBrightness(brightness);
+    pixels.setPixelColor(random(0, NUMBEROFPIXELS), random(0, 255), random(0, 255), random(0, 255));
+    pixels.show();
+    lastTime = millis();
+  }
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
