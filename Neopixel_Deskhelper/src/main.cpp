@@ -34,6 +34,10 @@ RUN RUNMODE;
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
 
 
+
+//const char* ssid = "YOUR-SSID";
+//const char* password = "YOUR-PWD";
+
 ESP8266WebServer server(80);
 
 
@@ -62,7 +66,7 @@ void setup() {
   // put your setup code here, to run once:
 
   pixelsetup();
-  wifiSetup();    // enable when using WiFi
+  //wifiSetup();    // enable when using WiFi
   //serversetup();  // enable when using http requests to change through modes
 
 }
@@ -326,6 +330,11 @@ void setPixels(byte r, byte g, byte b, byte brightness, byte fromPixel, byte pix
   pixels.fill(pixels.Color(r, g, b), fromPixel, pixelCount);
   pixels.setBrightness(brightness);
   pixels.show();
+}
+
+void toGreen()
+{
+  
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
