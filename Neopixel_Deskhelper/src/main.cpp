@@ -59,7 +59,7 @@ void setAllPixels(byte r, byte g, byte b, byte brightness);
 void setPixels(byte r, byte g, byte b, byte brightness, byte fromPixel = 5, byte pixelCount = 3);
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness = 5, byte maxBrightness = 50);
 void kitEffect(byte r = 255, byte g = 0, byte b = 0, byte brightness = 255, int delayTime = 200);
-void splatter(byte brightness = 255, int delayTime = 250);
+void splatter(byte brightness = 255, int delayTime = random(30, 300));
 
 void httpBreatheReq();
 void httpRunRightReq();
@@ -202,7 +202,8 @@ void nextState()
     STATE = (STATES)((int)STATE + 1);
   }
   
-  
+  pixels.clear();
+  runIndex = 1;
 }
 
 /**
