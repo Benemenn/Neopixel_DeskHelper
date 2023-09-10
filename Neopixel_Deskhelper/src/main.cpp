@@ -40,12 +40,17 @@ Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //
 //const char* ssid = "YOUR-SSID";
 //const char* password = "YOUR-PWD";
 
+IPAddress local_IP(192,168,4,22);
+IPAddress gateway(192,168,4,9);
+IPAddress subnet(255,255,255,0);
+
 ESP8266WebServer server(80);
 
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 void pixelsetup();
-void wifiSetup();
+void wifiClientSetup();
+void wifiAPSetup();
 void serversetup();
 
 void checkWiFi();
@@ -70,8 +75,9 @@ void setup() {
   // put your setup code here, to run once:
 
   pixelsetup();
-  //wifiSetup();    // enable when using WiFi
+  //wifiClientSetup();    // enable when using WiFi
   //serversetup();  // enable when using http requests to change through modes
+  //wifiAPSetup();
 
 }
 
@@ -136,7 +142,7 @@ void serversetup()
 /**
  * @brief handle wifi setup 
 */
-void wifiSetup()
+void wifiClientSetup()
 {
   WiFi.mode(WIFI_STA);        //station mode
   WiFi.begin(ssid, password);
@@ -171,6 +177,16 @@ void checkWiFi()
       delay(100);
     }
   }
+}
+
+/**
+ * @brief configure your ESP as an AP you can connect to
+*/
+void wifiAPSetup()
+{
+  WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAP(ssid, password);
+  delay(500);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
