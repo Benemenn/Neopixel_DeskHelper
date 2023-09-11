@@ -158,6 +158,8 @@ void serversetup()
   server.on("/kit", HTTP_GET, httpKITReq);
   server.on("/party", HTTP_GET, httpSplatterReq);
 
+  server.onNotFound(handleNotFound);
+
   server.begin();
 }
 
@@ -460,4 +462,8 @@ void httpSplatterReq()
 {
   STATE = SPLATTER;
   server.send(200);
+}
+
+void handleNotFound(){
+  server.send(404, "text/plain", "404: Not found");
 }
