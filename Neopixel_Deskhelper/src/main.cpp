@@ -67,7 +67,7 @@ void runPixelsRightToLeft(byte r, byte g, byte b, int delayTime, byte brightness
 void setAllPixels(byte r, byte g, byte b, byte brightness);
 void setPixels(byte r, byte g, byte b, byte brightness, byte fromPixel = 5, byte pixelCount = 3);
 void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness = 5, byte maxBrightness = desiredBrightness);
-void kitEffect(byte r = 255, byte g = 0, byte b = 0, byte brightness = desiredBrightness, int delayTime = 200);
+void kitEffect(byte r = 255, byte g = 0, byte b = 0, byte brightness = desiredBrightness, int delayTime = 100);
 void splatter(byte brightness = desiredBrightness, int delayTime = random(30, 300));
 
 void httpBreatheReq();
@@ -77,6 +77,7 @@ void httpToggleDemo();
 void httpKITReq();
 void httpSplatterReq();
 void httpSetBrightnessReq();
+void httpSetCredentials();
 
 void handleNotFound();
 
@@ -165,6 +166,8 @@ void serversetup()
   server.on("/party", HTTP_GET, httpSplatterReq);
 
   server.on("/setBrightness", HTTP_POST, httpSetBrightnessReq);
+
+  server.on("/setCredentials", HTTP_POST, httpSetCredentials);
 
   server.onNotFound(handleNotFound);
 
@@ -488,6 +491,49 @@ void httpSetBrightnessReq()
     server.send(200);
   }
   
+}
+
+void httpSetCredentials()
+{
+  if (!server.hasArg("auth") || !server.hasArg("ssid") || !server.hasArg("pwd") || server.arg("auth") == NULL || server.arg("ssid") == NULL || server.arg("pwd") == NULL)
+  {
+    server.send(400, "text/plain", "400: Invalid Request");
+  }
+  else if(server.arg("auth") == "admin")
+  {
+    const char* newSSID = (server.arg("ssid")).c_str();
+    const char* newPWD = (server.arg("pwd")).c_str();
+
+    byte tryCounter = 0;
+    byte maxTryCounter = 15;
+
+    WiFi.disconnect(true);
+    pixels.clear();
+
+    WiFi.hostname(ESPWIFIHOSTNAME.c_str());
+    WiFi.mode(WIFI_STA);        //station mode
+    
+    WiFi.begin(newSSID, newPWD);
+
+
+    while (WiFi.status() != WL_CONNECTED && tryCounter <= maxTryCounter) {
+      setPixels(0, 0, 255, 10, 5, 3); // blue for waiting for connection
+      delay(1000);
+      tryCounter++;
+    }
+
+    if (WiFi.status() != WL_CONNECTED && tryCounter > maxTryCounter)
+    {
+      wifiClientSetup();
+    }
+    
+    if(WiFi.status() == WL_CONNECTED)
+    {
+      setPixels(0, 255, 0, 255, 5, 1); // green, connection established
+      //server.send(200, "text/plain", "200: Connected to Network!"); //original sender cannot receive response, since network has changed
+    }
+    
+  }
 }
 
 void handleNotFound(){
