@@ -27,6 +27,9 @@ long currentTime = millis();
 long lastTime = currentTime;
 long lastStateChangeTime = lastTime;
 
+/// @brief Brightness that is transferred via HTTP_POST Request
+byte desiredBrightness = 150;
+
 byte currentBrightness = 0;
 byte runIndex = 0;
 
@@ -39,8 +42,8 @@ OPERATIONMODE OPMODE;
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
 
 const String ESPWIFIHOSTNAME = "ESPDeskStand";
-//const char* ssid = "YOUR-SSID";
-//const char* password = "YOUR-PWD";
+//const char* ssid = "SSID";
+//const char* password = "PASSWORD";
 
 IPAddress local_IP(192,168,4,22);
 IPAddress gateway(192,168,4,9);
@@ -59,13 +62,13 @@ void checkWiFi();
 
 void changeState(long timeInms);
 void nextState();
-void runPixelsLeftToRight(byte r, byte g, byte b, int delayTime, byte brightness = 200);
-void runPixelsRightToLeft(byte r, byte g, byte b, int delayTime, byte brightness = 200);
+void runPixelsLeftToRight(byte r, byte g, byte b, int delayTime, byte brightness = desiredBrightness);
+void runPixelsRightToLeft(byte r, byte g, byte b, int delayTime, byte brightness = desiredBrightness);
 void setAllPixels(byte r, byte g, byte b, byte brightness);
 void setPixels(byte r, byte g, byte b, byte brightness, byte fromPixel = 5, byte pixelCount = 3);
-void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness = 5, byte maxBrightness = 50);
-void kitEffect(byte r = 255, byte g = 0, byte b = 0, byte brightness = 255, int delayTime = 200);
-void splatter(byte brightness = 255, int delayTime = random(30, 300));
+void breathe(byte r, byte g, byte b, int delayTime, byte minBrightness = 5, byte maxBrightness = desiredBrightness);
+void kitEffect(byte r = 255, byte g = 0, byte b = 0, byte brightness = desiredBrightness, int delayTime = 200);
+void splatter(byte brightness = desiredBrightness, int delayTime = random(30, 300));
 
 void httpBreatheReq();
 void httpRunRightReq();
@@ -73,6 +76,9 @@ void httpRunLeftReq();
 void httpToggleDemo();
 void httpKITReq();
 void httpSplatterReq();
+void httpSetBrightnessReq();
+
+void handleNotFound();
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -95,7 +101,7 @@ void loop() {
       break;
 
     case BREATHE :
-      breathe(130, 0, 155, 50);
+      breathe(100, 30, 155, 50);
       break;
 
     case RUNRIGHT :
@@ -157,6 +163,8 @@ void serversetup()
   server.on("/runleft", HTTP_GET, httpRunLeftReq);
   server.on("/kit", HTTP_GET, httpKITReq);
   server.on("/party", HTTP_GET, httpSplatterReq);
+
+  server.on("/setBrightness", HTTP_POST, httpSetBrightnessReq);
 
   server.onNotFound(handleNotFound);
 
@@ -462,6 +470,24 @@ void httpSplatterReq()
 {
   STATE = SPLATTER;
   server.send(200);
+}
+
+void httpSetBrightnessReq()
+{
+  if (! server.hasArg("brightness"))
+  {
+    server.send(400, "text/plain", "400: Invalid Request");
+  }
+  else if(server.arg("brightness").toInt() > 255)
+  {
+    server.send(400, "text/plain", "400: Invalid Request, Value not in bound");
+  }
+  else
+  {
+    desiredBrightness = server.arg("brightness").toInt();
+    server.send(200);
+  }
+  
 }
 
 void handleNotFound(){
