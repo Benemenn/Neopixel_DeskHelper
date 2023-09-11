@@ -21,6 +21,7 @@ enum BREATHMODE{IN, OUT};
 enum STATES{INIT, IDLE, BREATHE, RUNLEFT, RUNRIGHT, SPLATTER, KITEFFECT, LASTMODE = KITEFFECT, FIRSTMODE = BREATHE};
 enum RUN{RUNIN, RUNOUT};
 enum INNERSTATE{ENTRY, DO, EXIT};
+enum OPERATIONMODE{DEMO, MANUAL};
 
 long currentTime = millis();
 long lastTime = currentTime;
@@ -33,10 +34,11 @@ BREATHMODE BREATH;
 STATES STATE;
 RUN RUNMODE;
 INNERSTATE INSTATE;
+OPERATIONMODE OPMODE;
 
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
 
-
+const String ESPWIFIHOSTNAME = "ESPDeskStand";
 //const char* ssid = "YOUR-SSID";
 //const char* password = "YOUR-PWD";
 
@@ -68,6 +70,9 @@ void splatter(byte brightness = 255, int delayTime = random(30, 300));
 void httpBreatheReq();
 void httpRunRightReq();
 void httpRunLeftReq();
+void httpToggleDemo();
+void httpKITReq();
+void httpSplatterReq();
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -75,8 +80,8 @@ void setup() {
   // put your setup code here, to run once:
 
   pixelsetup();
-  //wifiClientSetup();    // enable when using WiFi
-  //serversetup();  // enable when using http requests to change through modes
+  wifiClientSetup();    // enable when using WiFi
+  serversetup();  // enable when using http requests to change through modes
   //wifiAPSetup();
 
 }
@@ -110,7 +115,20 @@ void loop() {
       break;
   }
 
-  changeState(20000); //disable if you dont want to cycle modes 
+  switch (OPMODE)
+  {
+    case DEMO :
+      changeState(20000); //disable if you dont want to cycle modes 
+      break;
+    
+    case MANUAL :
+      //dont do anything
+      break;
+
+    default:
+      break;
+  }
+  
 
 }
 
@@ -133,9 +151,13 @@ void pixelsetup()
 void serversetup()
 {
   // different possible http requests and which function to call on request
+  server.on("/toggleMode", HTTP_GET, httpToggleDemo);
   server.on("/breathe", HTTP_GET, httpBreatheReq);
   server.on("/runright", HTTP_GET, httpRunRightReq);
   server.on("/runleft", HTTP_GET, httpRunLeftReq);
+  server.on("/kit", HTTP_GET, httpKITReq);
+  server.on("/party", HTTP_GET, httpSplatterReq);
+
   server.begin();
 }
 
@@ -144,6 +166,7 @@ void serversetup()
 */
 void wifiClientSetup()
 {
+  WiFi.hostname(ESPWIFIHOSTNAME.c_str());
   WiFi.mode(WIFI_STA);        //station mode
   WiFi.begin(ssid, password);
 
@@ -403,6 +426,11 @@ void splatter(byte brightness, int delayTime)
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
+void httpToggleDemo()
+{
+  OPMODE = ((OPMODE == DEMO) ? MANUAL : DEMO);
+  server.send(200);
+}
 
 void httpBreatheReq()
 {
@@ -419,5 +447,17 @@ void httpRunRightReq()
 void httpRunLeftReq()
 {
   STATE = RUNLEFT;
+  server.send(200);
+}
+
+void httpKITReq()
+{
+  STATE = KITEFFECT;
+  server.send(200);
+}
+
+void httpSplatterReq()
+{
+  STATE = SPLATTER;
   server.send(200);
 }
