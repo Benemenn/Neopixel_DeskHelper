@@ -42,8 +42,8 @@ OPERATIONMODE OPMODE;
 Adafruit_NeoPixel pixels(NUMBEROFPIXELS, PIXELDATAPIN, NEO_GRB + NEO_KHZ800); //Constructor, 3rd parameter editable
 
 const String ESPWIFIHOSTNAME = "ESPDeskStand";
-//const char* ssid = "SSID";
-//const char* password = "PASSWORD";
+const char* SSID = ssid;
+const char* PWD = password;
 
 IPAddress local_IP(192,168,4,22);
 IPAddress gateway(192,168,4,9);
@@ -178,7 +178,7 @@ void wifiClientSetup()
 {
   WiFi.hostname(ESPWIFIHOSTNAME.c_str());
   WiFi.mode(WIFI_STA);        //station mode
-  WiFi.begin(ssid, password);
+  WiFi.begin(SSID, PWD);
 
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -218,7 +218,7 @@ void checkWiFi()
 void wifiAPSetup()
 {
   WiFi.softAPConfig(local_IP, gateway, subnet);
-  WiFi.softAP(ssid, password);
+  WiFi.softAP(SSID, PWD);
   delay(500);
 }
 
